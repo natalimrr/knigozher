@@ -98,11 +98,11 @@ def change_book():
     if current_user.id != 1:
         flash('Данная страница не доступна для Вас!')
         return redirect(url_for('index'))
+    global id_book
     if id_book == None:
         flash('Вы не выбрали книгу для изменения!')
         return redirect(url_for('books'))
     form = ChangeBookForm()
-    global id_book
     if form.validate_on_submit():
         cursor.execute('update book set price = %s, quantity_in_stock = %s, image = %s, description = % where id = %s;', (form.price.data, form.quantity_in_stock.data, form.image.data, form.description.data, id_book,))
         conn.commit()
@@ -162,7 +162,7 @@ def new_book():
             return redirect(url_for('new_book'))
     return render_template('new_book.html', title='Добавление книги в базу', form=form)
 
-@app.route('active_orders', methods=['GET', 'POST'])
+@app.route('/active_orders', methods=['GET', 'POST'])
 @login_required
 def active_orders():
     form = IdForm()
@@ -204,7 +204,7 @@ def active_orders():
         return redirect(url_for('active_orders'))
     return render_template('orders.html', title='Активные заказы', form=form, orders=orders, accounts=accounts, book_in_order=book_in_order, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
 
-@app.route('orders', methods=['GET', 'POST'])
+@app.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
     form = None
@@ -298,4 +298,4 @@ def books():
             global id_book
             id_book = form.id.data
             return redirect(url_for('change_book'))
-    return render_template('books.html', title='Книги', books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories, price=price)
+    return render_template('books.html', title='Книги', books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
