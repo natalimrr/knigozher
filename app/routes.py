@@ -210,7 +210,7 @@ def active_orders():
 def orders():
     form = None
     if current_user.id == 1:
-        cursor.execute('select fio from account;')
+        cursor.execute('select id, fio from account;')
         accounts = cursor.fetchall()
         cursor.execute('select * from order_ order by id desc;')
     else:
