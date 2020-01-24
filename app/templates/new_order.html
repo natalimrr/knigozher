@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+	<h1>{{ title }}</h1>
+    <div class="row">
+        <div class="col-md-6">
+            {% for book in books %}
+                <div class="well well-sm">
+                    <p>
+                        <img src="{{ book[6] }}" height="120" hspace="10" vspace="5" align="left">
+                        <b>{{ book[2] }}</b><br>
+                        ISBN: {{ book[1] }}<br>
+                        Цена: {{ book[3] }}<br>
+                        Издательство: {{ book[5] }}<br>
+                        Категории:
+                        {% for categories_book in categories_books %}
+                            {% if categories_book[0] == book[0] %}
+                                <p>{{ categories[categories_book[1] - 1][0] }}; </p>
+                            {% endif %}
+                        {% endfor %}
+                        <br>
+                        Авторы:
+                        {% for authors_book in authors_books %}
+                            {% if authors_book[0] == book[0] %}
+                                <p>{{ authors[authors_book[1] - 1][0] }}; </p>
+                            {% endif %}
+                        {% endfor %}
+                        <br>
+                    <input class="btn btn-default" type="button" name="button_book_{{ book[0] }}" id="{{ book[0] }}" value="Удалить книгу" onclick="buttonClick(this)"/>
+                    </p>
+                </div>
+            {% endfor %}
+            <b>Стоимость всех книг: {{ price }}</b><br>
+            {{ wtf.quick_form(form) }}
+		</div>
+    </div>
+{% endblock %}
