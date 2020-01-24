@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, validators
+from wtforms import StringField, TextAreaField, PasswordField, BooleanField, SubmitField, IntegerField, validators
 
 class LoginForm(FlaskForm):
     login = StringField('Логин', [validators.DataRequired()])
@@ -12,7 +12,7 @@ class NewAccountForm(FlaskForm):
     password = PasswordField('Пароль', [validators.DataRequired()])
     password_replay = PasswordField('Повторите пароль', [validators.DataRequired()])
     fio = StringField('ФИО', [validators.DataRequired()])
-    email = StringField('Email', [validators.DataRequired(), validators.Email])
+    email = StringField('Email', [validators.DataRequired(), validators.Email()])
     submit = SubmitField('Зарегистрироваться')
 
 class ChoiceBookForm(FlaskForm):

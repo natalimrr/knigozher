@@ -60,9 +60,9 @@ def create_account():
             flash('Пароли не совпадают!')
             return redirect(url_for('create_account'))
         cursor.execute('select id from account where login = %s;', (form.login.data,))
-        user = cursor.fetchone()
-        if user is not None:
-            login_user(load_user(user[0]))
+        user_id = cursor.fetchone()
+        if user_id:
+            login_user(load_user(user_id[0]))
             flash('Вы успешно зарегистрировали новый аккаунт!')
             return redirect(url_for('cart'))
     return render_template('create_account.html', title='Регистрация', form=form)
@@ -167,7 +167,7 @@ def new_book():
 def active_orders():
     form = IdForm()
     if current_user.id == 1:
-        cursor.execute('select fio from account where id in (select id_account from order_ where date_of_completion is null);')
+        cursor.execute('select id, fio from account where id in (select id_account from order_ where date_of_completion is null);')
         accounts = cursor.fetchall()
         cursor.execute('select * from order_ where date_of_completion is null order by id desc;')
     else:
@@ -178,7 +178,7 @@ def active_orders():
         cursor.execute('select * from book_in_order where id_order in (select id from order_ where date_of_completion is null);')
     else:
         cursor.execute('select * from book_in_order where id_order in (select id from order_ where id_account = %s and date_of_completion is null);', (current_user.id,))
-    book_in_order = cursor.fetchall()
+    books_in_orders = cursor.fetchall()
     if current_user.id == 1:
         cursor.execute('select * from book where id in (select id_book from book_in_order where id_order in (select id from order_ where date_of_completion is null));')
     else:
@@ -200,9 +200,10 @@ def active_orders():
     categories = cursor.fetchall()
     if form.validate_on_submit():
         cursor.execute('update order_ set date_of_completion = %s where id = %s;', (date.today(), form.id.data,))
+        conn.commit()
         flash('Заказ выполнен!')
-        return redirect(url_for('active_orders'))
-    return render_template('orders.html', title='Активные заказы', form=form, orders=orders, accounts=accounts, book_in_order=book_in_order, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
+        return redirect(url_for('orders'))
+    return render_template('orders.html', title='Активные заказы', form=form, orders=orders, accounts=accounts, books_in_orders=books_in_orders, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
 
 @app.route('/orders', methods=['GET', 'POST'])
 @login_required
@@ -229,7 +230,7 @@ def orders():
     if current_user.id == 1:
         cursor.execute('select * from author_book where id_book in (select id_book from book_in_order);')
     else:
-        cursor.execute('select * from author_book where id_book in (select id_book from book_in_order where id_order in (select id from order_ where id_account = %s));;', (current_user.id,))
+        cursor.execute('select * from author_book where id_book in (select id_book from book_in_order where id_order in (select id from order_ where id_account = %s));', (current_user.id,))
     authors_books = cursor.fetchall()
     cursor.execute('select * from author;')
     authors = cursor.fetchall()
@@ -240,13 +241,13 @@ def orders():
     categories_books = cursor.fetchall()
     cursor.execute('select * from category;')
     categories = cursor.fetchall()
-    return render_template('orders.html', form=form, title='Все заказы', orders=orders, accounts=accounts, books_in_orders=books_in_orders, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
+    return render_template('orders.html', title='Все заказы', form=form, orders=orders, accounts=accounts, books_in_orders=books_in_orders, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
 
 @app.route('/new_order', methods=['GET', 'POST'])
 @login_required
 def new_order():
     form = NewOrderForm()
-    cursor.execute('select * from book_in_cart where id_account = %s order by id asc;', (current_user.id,))
+    cursor.execute('select * from book_in_cart where id_account = %s;', (current_user.id,))
     books_in_cart = cursor.fetchall()
     cursor.execute('select * from book where id in (select id_book from book_in_cart where id_account = %s);', (current_user.id,))
     books = cursor.fetchall()
@@ -258,19 +259,19 @@ def new_order():
     categories_books = cursor.fetchall()
     cursor.execute('select * from category;')
     categories = cursor.fetchall()
-    cursor.execute('select sum(book.price) from book_in_cart inner join book on book_in_cart.id_book = book.id group by book_in_cart.id_account having book_in_cart.id_account = %s;', (current_user.id,))
+    cursor.execute('select sum(book.price * book_in_cart.quantity) from book_in_cart inner join book on book_in_cart.id_book = book.id group by book_in_cart.id_account having book_in_cart.id_account = %s;',(current_user.id,))
     price = cursor.fetchone()
     if form.validate_on_submit():
         cursor.execute('insert into order_ (date_of_registration, price, adress, id_account) values(%s, %s, %s, %s);', (date.today(), price, form.adress.data, current_user.id,))
-        cursor.execute('select max(id) from order_ where id_account = %s);', (current_user.id,))
+        cursor.execute('select max(id) from order_ where id_account = %s;', (current_user.id,))
         id_order = cursor.fetchone()
         for book_in_cart in books_in_cart:
-            cursor.execute('insert into book_in_order (id_book, id_order, quantity) values (%s, %s);', (book_in_cart[0], id_order, book_in_cart[2],))
+            cursor.execute('insert into book_in_order (id_book, id_order, quantity) values (%s, %s, %s);', (book_in_cart[0], id_order, book_in_cart[2],))
             cursor.execute('delete from book_in_cart where id_book = %s and id_account = %s;', (book_in_cart[0], current_user.id,))
         conn.commit()
         flash('Заказ принят в обработку!')
         return redirect(url_for('active_orders'))
-    return render_template('new_order.html', form=form, title='Проверка заказа', books_in_cart=books_in_cart, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories, price=price)
+    return render_template('new_order.html', title='Проверка заказа', form=form, books_in_cart=books_in_cart, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories, price=price)
 
 @app.route('/books', methods=['GET', 'POST'])
 def books():
@@ -290,9 +291,21 @@ def books():
     categories = cursor.fetchall()
     if form is not None and form.validate_on_submit():
         if current_user.id != 1:
-            cursor.execute('insert into book_in_cart (id_book, id_account, quantity) values (%s, %s);', (form.id.data, current_user.id, form.quantity.data,))
-            conn.commit()
-            flash('Книга добавлена в корзины!')
+            cursor.execute('select quantity_in_stock from book where id = %s;', (form.id.data,))
+            quantity_in_stock = cursor.fetchone()
+            if quantity_in_stock[0] < int(form.quantity.data):
+                flash('На складе нет такого количества данной книги!')
+                return redirect(url_for('books'))
+            cursor.execute('select * from book_in_cart where id_book = %s and id_account = %s;', (form.id.data, current_user.id,))
+            book_in_cart = cursor.fetchone()
+            if book_in_cart:
+                cursor.execute('update book_in_cart set quantity = %s where id_book = %s and id_account = %s;', (book_in_cart[2] + int(form.quantity.data), form.id.data, current_user.id,))
+                conn.commit()
+                flash('Количество данных книг увеличено!')
+            else:
+                cursor.execute('insert into book_in_cart (id_book, id_account, quantity) values (%s, %s, %s);', (form.id.data, current_user.id, form.quantity.data,))
+                conn.commit()
+                flash('Книга добавлена в корзины!')
             return redirect(url_for('books'))
         else:
             global id_book

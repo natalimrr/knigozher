@@ -11,7 +11,7 @@
         </script>
     {% endif %}
 {% endblock %}
-	
+
 {% block app_content %}
 	<h1>{{ title }}</h1>
     <div class="row">
@@ -29,8 +29,12 @@
                         {% endif %}
                         Цена: {{ order[3] }}<br>
                         Адресс: {{ order[4] }}<br>
-                        {% if account != None %}
-                            Клиент: {{ account[order[5] - 1][0] }}<br>
+                        {% if accounts != None %}
+                            {% for account in accounts %}
+                                {% if account[0] == order[5] %}
+                                    Клиент: {{ account[1] }}<br>
+                                {% endif %}
+                            {% endfor %}
                         {% endif %}
                         {% for books_in_order in books_in_orders %}
                             {% if books_in_order[1] == order[0] %}
@@ -44,19 +48,20 @@
                                         Издательство: {{ book[5] }}<br>
                                         Категории:
                                         {% for categories_book in categories_books %}
-                                            {% if categories_book[0] == book_in_order[0] %}
-                                                <p>{{ categories[categories_book[1] - 1][0] }}; </p>
+                                            {% if categories_book[0] == books_in_order[0] %}
+                                                {{ categories[categories_book[1] - 1][1] }};
                                             {% endif %}
                                         {% endfor %}
                                         <br>
                                         Авторы:
                                         {% for authors_book in authors_books %}
-                                            {% if authors_book[0] == book_in_order[0] %}
-                                                <p>{{ authors[authors_book[1] - 1][0] }}; </p>
+                                            {% if authors_book[0] == books_in_order[0] %}
+                                                {{ authors[authors_book[1] - 1][1] }};
                                             {% endif %}
                                         {% endfor %}
                                     {% endif %}
                                 {% endfor %}
+                                <br>
                             {% endif %}
                         {% endfor %}
                         {% if form != None %}
