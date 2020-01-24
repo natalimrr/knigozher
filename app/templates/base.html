@@ -27,7 +27,7 @@
                         <li><a href="{{ url_for('new_book') }}">Добавить книгу в базу</a></li>
                         <li><a href="{{ url_for('active_orders') }}">Все активные заказы</a></li>
                         <li><a href="{{ url_for('orders') }}">Все заказы</a></li>
-                    {% else %}
+                    {% elif current_user.is_authenticated %}
                         <li><a href="{{ url_for('active_orders') }}">Мои активные заказы</a></li>
                         <li><a href="{{ url_for('orders') }}">Мои заказы</a></li>
                     {% endif %}

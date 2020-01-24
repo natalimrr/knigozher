@@ -1,6 +1,5 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, validators
-from app import app, conn
 
 class LoginForm(FlaskForm):
     login = StringField('Логин', [validators.DataRequired()])
@@ -28,8 +27,8 @@ class IdForm(FlaskForm):
 class NewBookForm(FlaskForm):
     isbn = IntegerField('ISBN', [validators.NumberRange(min=1000000000000, max=9999999999999)])
     title = StringField('Название книги', [validators.DataRequired()])
-    categories = TextAreaField('Введите все категории через двоеточие')
-    authors = TextAreaField('Введите всех авторов через двоеточие')
+    categories = TextAreaField('Введите все категории через двоеточие с пробелом')
+    authors = TextAreaField('Введите всех авторов через двоеточие с пробелом')
     price = IntegerField('Цена', [validators.DataRequired()])
     publishing_house = StringField('Издательство', [validators.DataRequired()])
     quantity_in_stock = IntegerField('Количество на складе', [validators.DataRequired()])

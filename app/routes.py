@@ -71,7 +71,7 @@ def create_account():
 @login_required
 def cart():
     form = IdForm()
-    cursor.execute('select * from book_in_cart where id_account = %s order by id asc;', (current_user.id,))
+    cursor.execute('select * from book_in_cart where id_account = %s order by id_book asc;', (current_user.id,))
     books_in_cart = cursor.fetchall()
     cursor.execute('select * from book where id in (select id_book from book_in_cart where id_account = %s);', (current_user.id,))
     books = cursor.fetchall()
@@ -126,15 +126,15 @@ def new_book():
         return redirect(url_for('index'))
     form = NewBookForm()
     if form.validate_on_submit():
-        cursor.execute('select id from account where isbn= %s;', (form.isbn.data,))
+        cursor.execute('select id from book where isbn= %s;', (form.isbn.data,))
         book = cursor.fetchone()
         if book is None:
             cursor.execute('insert into book (isbn, title, price, publishing_house, quantity_in_stock, image, description) values(%s, %s, %s, %s, %s, %s, %s);', (form.isbn.data, form.title.data, form.price.data, form.publishing_house.data, form.quantity_in_stock.data, form.image.data, form.description.data,))
             cursor.execute('select id from book where isbn= %s;', (form.isbn.data,))
             id_book = cursor.fetchone()
             conn.commit()
-            authors = form.authors.data.split(';')
-            categories = form.categories.data.split(';')
+            authors = form.authors.data.split('; ')
+            categories = form.categories.data.split('; ')
             for author in authors:
                 cursor.execute('select id from author where fio= %s;', (author,))
                 id_author = cursor.fetchone()
@@ -167,7 +167,7 @@ def new_book():
 def active_orders():
     form = IdForm()
     if current_user.id == 1:
-        cursor.execute('select fio from account where id_account in (select id_account from order_ where date_of_completion is null);')
+        cursor.execute('select fio from account where id in (select id_account from order_ where date_of_completion is null);')
         accounts = cursor.fetchall()
         cursor.execute('select * from order_ where date_of_completion is null order by id desc;')
     else:
@@ -278,7 +278,7 @@ def books():
         form = ChoiceBookForm()
     else:
         form = None
-    cursor.execute('select * from book;')
+    cursor.execute('select * from book order by id desc;')
     books = cursor.fetchall()
     cursor.execute('select * from author_book;')
     authors_books = cursor.fetchall()
@@ -288,7 +288,7 @@ def books():
     categories_books = cursor.fetchall()
     cursor.execute('select * from category;')
     categories = cursor.fetchall()
-    if form.validate_on_submit():
+    if form is not None and form.validate_on_submit():
         if current_user.id != 1:
             cursor.execute('insert into book_in_cart (id_book, id_account, quantity) values (%s, %s);', (form.id.data, current_user.id, form.quantity.data,))
             conn.commit()
@@ -298,4 +298,4 @@ def books():
             global id_book
             id_book = form.id.data
             return redirect(url_for('change_book'))
-    return render_template('books.html', title='Книги', books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)
+    return render_template('books.html', title='Книги', form=form, books=books, authors_books=authors_books, authors=authors, categories_books=categories_books, categories=categories)

@@ -9,7 +9,7 @@
     }
     </script>
 {% endblock %}
-	
+
 {% block app_content %}
 	<h1>{{ title }}</h1>
     <div class="row">
@@ -40,8 +40,12 @@
                     </p>
                 </div>
             {% endfor %}
-            <b>Стоимость всех книг: {{ price }} рублей</b><br>
-            <br><a class="btn btn-default" href="{{ url_for('new_order') }}">Оформить заказ</a><br><br>
+            {% if price != None %}
+                <b>Стоимость всех книг: {{ price }} рублей</b><br>
+                <br><a class="btn btn-default" href="{{ url_for('new_order') }}">Оформить заказ</a><br><br>
+            {% else %}
+                Ваша корзина пуста.
+            {% endif %}
 		</div>
     </div>
     <div style='display: none;'>
