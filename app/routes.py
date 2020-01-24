@@ -104,7 +104,7 @@ def change_book():
         return redirect(url_for('books'))
     form = ChangeBookForm()
     if form.validate_on_submit():
-        cursor.execute('update book set price = %s, quantity_in_stock = %s, image = %s, description = % where id = %s;', (form.price.data, form.quantity_in_stock.data, form.image.data, form.description.data, id_book,))
+        cursor.execute('update book set price = %s, quantity_in_stock = %s, image = %s, description = %s where id = %s;', (form.price.data, form.quantity_in_stock.data, form.image.data, form.description.data, id_book,))
         conn.commit()
         flash('Данные изменены!')
         id_book = None
